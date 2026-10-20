@@ -1,6 +1,6 @@
 # Media Directory Lister (v4.0h)
 
-**Media Directory Lister** is a lightweight Python desktop application with a graphical user interface (GUI). It scans local folders or network drives to generate an **interactive, elegant, and detailed HTML report** featuring comprehensive metadata for all audio and video files found.
+**Media Directory Lister** is a lightweight Python desktop application created with AI with a graphical user interface (GUI). It scans local folders or network drives to generate an **interactive, elegant, and detailed HTML report** featuring comprehensive metadata for all audio and video files found.
 
 ### 🚀 Key Features
 
