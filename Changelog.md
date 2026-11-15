@@ -8,6 +8,69 @@ is progressive (`major.minor`), with an incremental number for each substantial 
 ## [Unreleased]
 
 _Nothing pending._
+## [5.63]
+- Fixes the worker saving in "Edit profile" and "New profile".
+  Previously, after setting profilo["worker"], _salva_profili() called _memorizza_colonne(), which re-read self.var_worker (still at the old value) and overwrote the chosen worker. Now self.var_worker is also updated after saving, so the main window combobox and the profile stay in sync.
+
+## [5.62]
+- The "Edit profile" and "New profile" windows now also show the "Analysis workers" Combobox (4, 6, 8, 12, 16, 24, 32).
+  The "Save" button saves name, folder, type, and worker together. Previously the combobox was only in the main window, so it could not be saved permanently in the profile.
+
+## [5.61]
+- Each profile now has a "worker" field (number of parallel ffprobe processes). Default 8. Recommended values: 4-6 for HDD or slow USB, 8 for general use, 16-24 for SSD or fast network. Range 1-32.
+- The "Media folder" tab has a "Analysis workers" Combobox with values 4, 6, 8, 12, 16, 24, 32. The value is saved in the profile.
+- _lavora uses the active profile's worker for the ThreadPoolExecutor.
+
+## [5.60]
+- Audio bitrate for Audio files (FLAC, ALAC, WAV, etc.): if missing after all attempts (audio.bit_rate, fmt.bit_rate, bps tags), the real average bitrate is used: size * 8 / duration, computed in memory. No more extra ffprobe calls per file: FLAC scanning is fast again, like in v5.50.
+  The value is the average over the whole file, not a 2-second sample: for VBR FLACs it is closer to the truth.
+- For Video files the condition does not trigger: size * 8 / duration would include the video stream. For Video files without audio.bit_rate it falls back to _bitrate_audio_reale, as in v5.59. So nothing is lost compared to v5.59: FLACs gain, everything else stays the same.
+
+## [5.59]
+- _sorgente_cambiata no longer runs os.path.isdir synchronously for non-local folders: for local folders the check stays immediate, for remote folders they are assumed valid (the "does it exist?" check is done in avvia() with the timeout dialog from v5.56). This way `<FocusOut>` no longer freezes for 20-30 seconds when the folder is remote and offline.
+- _sorgente_scelta no longer calls testo_sorgente for non-local folders: testo_sorgente goes through WNetGetConnectionW, which can block on an offline network drive. For non-local folders the raw path is used.
+
+## [5.58]
+- New "Annulla.TButton" style: red background (ERRORE), white text, darker hover.
+- The "Cancel" button at the bottom of the main window uses this style.
+
+## [5.57]
+- _on_closing: if a scan is running, ask for confirmation before closing.
+- avvia(): the "Generate" button is disabled during the folder check dialog, so a second scan cannot start by mistake.
+- Report: the text search now includes video codecs, audio codecs, and audio tracks.
+- Report: natural sort for the file name (Episode 2 before Episode 10).
+- Report: the "Images only" button is hidden when the report contains no images.
+- Cosmetics: removed a redundant json import, an unused loop variable, a double conn.close(), and a redundant DELETE in CacheScansioni.salva.
+
+## [5.56]
+- avvia() no longer blocks on os.path.isdir for offline network folders. For local folders the check stays immediate (os.path.isdir, fast). For network folders the check runs in a thread with a "Folder check..." dialog and a "Cancel" button. If the thread doesn't answer within 3 seconds, the folder is assumed unreachable, the dialog is closed and an error is shown. The GUI never freezes.
+
+## [5.55]
+- _chiedi_profilo_per_cartella_nuova no longer shows the dialog when there is only one option: the choice is applied directly.
+- Removed a dead elif branch in _chiedi_profilo_per_cartella_nuova.
+- _memorizza_colonne now has an English comment explaining why the name is historical and what the method actually does (it saves only the view options, not the columns).
+
+## [5.54]
+- _sorgente_cambiata remembers for which folder the user already answered in the profile-choice dialog (self._cartella_scelta_sessione). If it is called again for the same folder (for example `<Return>` followed by `<FocusOut>`), it exits immediately without reopening the dialog.
+
+## [5.53]
+- avvia() no longer calls _sorgente_cambiata() at the start. A folder typed by hand was already handled by the `<Return>` and `<FocusOut>` bindings of the entry box, so the call was redundant and, since v5.48, it reopened the profile-choice dialog for a folder the user had already decided to use without associating it with a profile.
+
+## [5.52]
+- New function _cartella_locale(percorso): True if the path is on a local drive, False if it is UNC, a mapped network drive, a relative path, or not determinable.
+- The three places that open filedialog.askdirectory (scegli_cartella, modifica_profilo, nuovo_profilo) pass initialdir only if the folder is local. If the folder is on an offline network, askdirectory starts from the Windows default folder and does not freeze the program for 20-30 seconds.
+
+## [5.51]
+- _bitrate_audio_reale now takes the audio track index and uses `-select_streams a:{index}`. _tracce_audio passes it for each track, so the computed bitrate is the one of the right track, not always the first one.
+- analizza uses _bitrate_audio_reale even when calcola_audio is False, if the bitrate is missing after all attempts (bit_rate, bps tags). Before, that branch was never executed.
+- versione_a_tuple extracts the leading numeric part of each component: a tag like "5.51-beta" is no longer considered lower than "5.50".
+- _lossless recognises DTS:X as lossless (in addition to DTS-HD MA).
+- _sorgente_cambiata does not open the choice dialog twice in a row (Return + FocusOut): a flag prevents the double opening.
+- "Includi immagini" no longer sets modifiche_non_salvate: it is a session option and must not trigger the "save changes?" message on close.
+
+## [5.50]
+- Fixes profile saving. In v5.48 "Modifica profilo", "Nuovo profilo", "Elimina profilo" and the type change no longer called _salva_profili() (the call had been removed from _profilo_cambiato to avoid implicit column saves), so changes stayed in memory but were not written to config.json and were lost on restart. Now every explicit profile change calls _salva_profili().
+
 
 # [5.41] — 2026-10-31
 
